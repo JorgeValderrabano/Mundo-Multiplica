@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mundo Multiplica: Aventuras con Números</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div id="app">
+    <!-- MENU SCREEN -->
+    <div id="menu-screen" class="screen active">
+        <div class="header">
+            <div class="stats-badge">⭐ <span id="total-stars">0</span> 🎖️ <span id="total-stickers">0</span></div>
+            <div class="header-controls">
+                <button class="btn-icon" id="repeat-btn" aria-label="Repetir problema">🔁</button>
+                <button class="btn-icon" id="mute-btn" aria-label="Activar o silenciar voz">🔊</button>
+            </div>
+        </div>
+        <h1 class="title">Mundo Multiplica</h1>
+        <div class="paths-grid">
+            <button class="path-btn path-suma" onclick="startGame('suma')" aria-label="Jugar Bosque de la Suma">
+                <span class="icon">🌲</span> Bosque de la Suma
+            </button>
+            <button class="path-btn path-resta" onclick="startGame('resta')" aria-label="Jugar Montaña de la Resta">
+                <span class="icon">⛰️</span> Montaña de la Resta
+            </button>
+            <button class="path-btn path-mult" onclick="startGame('mult')" aria-label="Jugar Ciudad Multiplicadora">
+                <span class="icon">🏙️</span> Ciudad Multiplicadora
+            </button>
+            <button class="path-btn path-div" onclick="startGame('div')" aria-label="Jugar Bahía de la División">
+                <span class="icon">🌊</span> Bahía de la División
+            </button>
+            <button class="path-btn path-mixed" onclick="startGame('mixta')" aria-label="Jugar Aventura Mixta">
+                <span class="icon">🗺️</span> Aventura Mixta
+            </button>
+        </div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="game-screen" class="screen">
+        <div class="header" style="width: 100%;">
+            <button class="btn-icon" onclick="goHome()" aria-label="Volver al menú">🏠</button>
+            <div class="header-controls">
+                <button class="btn-icon" onclick="repeatProblem()" aria-label="Repetir problema">🔁</button>
+                <div class="streak-container">🔥 Racha: <span id="current-streak">0</span></div>
+            </div>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat-chip">Nivel: <span id="current-level">1</span></div>
+            <div class="stat-chip">Progreso: <span id="level-progress">0/10</span></div>
+            <div class="stat-chip">Mejor racha: <span id="best-streak">0</span></div>
+        </div>
+        
+        <div class="question-area">
+            <h2 class="question-text" id="question-text">? + ?</h2>
+            <button class="help-btn" onclick="showHelp()" aria-label="Mostrar ayuda visual">💡 Necesito ayuda</button>
+        </div>
+
+        <div class="answers-grid" id="answers-grid">
+            <!-- Respuestas generadas por JS -->
+        </div>
+    </div>
+
+    <!-- FEEDBACK OVERLAY -->
+    <div id="feedback-overlay">
+        <div class="feedback-emoji" id="feedback-emoji">🎉</div>
+        <p class="feedback-text" id="feedback-text">¡Muy bien!</p>
+        <button class="continue-btn" id="continue-btn" style="display: none;" onclick="continueGame()" aria-label="Continuar con la siguiente pregunta">Continuar</button>
+    </div>
+
+    <!-- SESSION WRAP-UP -->
+    <div id="session-overlay">
+        <div class="session-content">
+            <h2>¡Sesión completada!</h2>
+            <div class="session-stars">⭐ <span id="session-stars">0</span></div>
+            <p class="feedback-text">Mejor racha: <span id="session-best">0</span></p>
+            <p class="feedback-text">Calcomanías: <span id="session-stickers">0</span></p>
+            <button class="continue-btn" onclick="closeSession()" aria-label="Jugar otra sesión">Jugar de nuevo</button>
+        </div>
+    </div>
+
+    <!-- HELP MODAL -->
+    <div id="help-modal">
+        <div class="help-content">
+            <h2 id="help-title">Visualiza la operación</h2>
+            <div class="blocks-container" id="blocks-container"></div>
+            <button class="close-help-btn" onclick="closeHelp()" aria-label="Cerrar ayuda">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/game.js"></script>
+</body>
+</html>
