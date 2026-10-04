@@ -9,6 +9,7 @@ const state = {
     num1: 0,
     num2: 0,
     isMuted: false,
+    volume: 0.8,
     consecutiveCorrect: 0,
     currentText: '',
     currentOp: '',
@@ -16,7 +17,8 @@ const state = {
     isVariation: false, // true si la pregunta actual viene de la cola de repaso
     totalStickers: 0,  // calcomanías acumuladas
     questionCount: 0,  // preguntas respondidas en la sesión actual
-    sessionStars: 0    // estrellas ganadas en la sesión actual
+    sessionStars: 0,   // estrellas ganadas en la sesión actual
+    fixedLevel: 0      // 0 = automático; 1–5 = nivel elegido
 };
 
 // Cada N estrellas acumuladas otorgan una calcomanía
@@ -36,7 +38,9 @@ function loadProgress() {
                 state.totalStars = data.totalStars || 0;
                 state.levels = data.levels || state.levels;
                 state.isMuted = data.isMuted || false;
+                state.volume = Number.isFinite(data.volume) ? Math.max(0, Math.min(1, data.volume)) : 0.8;
                 state.totalStickers = data.totalStickers || 0;
+                state.fixedLevel = Number.isInteger(data.fixedLevel) ? Math.max(0, Math.min(5, data.fixedLevel)) : 0;
             }
         } catch (e) {
             // Datos corruptos: restaurar valores iniciales y descartar la save dañada
@@ -45,6 +49,7 @@ function loadProgress() {
     }
     updateStatsUI();
     updateMuteUI();
+    updateDifficultyUI();
 }
 
 function saveProgress() {
@@ -53,7 +58,9 @@ function saveProgress() {
         totalStars: state.totalStars,
         levels: state.levels,
         isMuted: state.isMuted,
-        totalStickers: state.totalStickers
+        volume: state.volume,
+        totalStickers: state.totalStickers,
+        fixedLevel: state.fixedLevel
     }));
 }
 
@@ -72,12 +79,81 @@ function updateStatsUI() {
     document.getElementById('current-streak').textContent = state.streak;
     document.getElementById('best-streak').textContent = state.bestStreak;
     const op = state.currentOp || state.operation;
-    document.getElementById('current-level').textContent = state.levels[op] || 1;
+    document.getElementById('current-level').textContent = state.fixedLevel || state.levels[op] || 1;
     document.getElementById('level-progress').textContent = `${state.consecutiveCorrect % 10}/10`;
 }
 
 function updateMuteUI() {
-    document.getElementById('mute-btn').textContent = state.isMuted ? '🔇' : '🔊';
+    document.querySelectorAll('.volume-button').forEach(button => {
+        button.querySelector('.volume-icon').src = state.isMuted ? 'assets/ui/mute-button.png' : 'assets/ui/sound-button.png';
+        button.setAttribute('aria-label', state.isMuted ? 'Ajustar volumen, silenciado' : 'Ajustar volumen');
+    });
+    document.querySelectorAll('.volume-slider').forEach(slider => {
+        slider.value = state.isMuted ? 0 : state.volume;
+    });
+}
+
+function toggleVolumePanel(button) {
+    const panel = button.closest('.volume-control').querySelector('.volume-popover');
+    const open = !panel.classList.contains('open');
+    closeVolumePanel();
+    panel.classList.toggle('open', open);
+    panel.setAttribute('aria-hidden', String(!open));
+    button.setAttribute('aria-expanded', String(open));
+    if (open) panel.querySelector('.volume-slider').focus();
+}
+
+function closeVolumePanel() {
+    document.querySelectorAll('.volume-popover').forEach(panel => {
+        panel.classList.remove('open');
+        panel.setAttribute('aria-hidden', 'true');
+    });
+    document.querySelectorAll('.volume-button').forEach(button => button.setAttribute('aria-expanded', 'false'));
+}
+
+function updateDifficultyUI() {
+    document.querySelectorAll('.level-btn').forEach(btn => {
+        const selected = Number(btn.dataset.level) === state.fixedLevel;
+        btn.classList.toggle('active', selected);
+        btn.setAttribute('aria-pressed', String(selected));
+    });
+}
+
+function setFixedLevel(level) {
+    state.fixedLevel = Math.max(0, Math.min(5, Number(level) || 0));
+    updateDifficultyUI();
+    saveProgress();
+    closeDifficulty();
+}
+
+function resetLevels() {
+    state.levels = { suma: 1, resta: 1, mult: 1, div: 1 };
+    state.fixedLevel = 0;
+    updateDifficultyUI();
+    updateStatsUI();
+    saveProgress();
+    closeDifficulty();
+}
+
+function openDifficulty() {
+    const modal = document.getElementById('difficulty-modal');
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+    modal.querySelector('.level-btn.active')?.focus();
+}
+
+function closeDifficulty() {
+    const modal = document.getElementById('difficulty-modal');
+    if (!modal.classList.contains('open')) return;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+    document.getElementById('difficulty-trigger')?.focus();
+}
+
+function closeDifficultyFromBackdrop(event) {
+    if (event.target.id === 'difficulty-modal') closeDifficulty();
 }
 
 // Text-to-Speech
@@ -89,31 +165,36 @@ function speak(text) {
         utterance.lang = 'es-ES';
         utterance.rate = 1.0;
         utterance.pitch = 1.2; // Voz más aguda y amigable
+        utterance.volume = state.volume;
         window.speechSynthesis.speak(utterance);
     }
 }
 
-// Texto hablado de una pregunta (para repetir)
-function questionSpoken(op, n1, n2) {
-    const opWord = op === 'suma' ? 'más' : op === 'resta' ? 'menos' : op === 'mult' ? 'por' : 'dividido entre';
-    return `¿Cuánto es ${n1} ${opWord} ${n2}?`;
-}
-
-// Repetir la pregunta en voz alta
-function repeatProblem() {
-    if (!state.currentOp) return;
-    speak(questionSpoken(state.currentOp, state.num1, state.num2));
-}
-
 if (typeof document !== 'undefined') {
-    document.getElementById('mute-btn').addEventListener('click', () => {
-        state.isMuted = !state.isMuted;
-        updateMuteUI();
-        saveProgress();
-        if (state.isMuted) window.speechSynthesis.cancel();
+    document.querySelectorAll('.volume-button').forEach(button => {
+        button.addEventListener('click', () => toggleVolumePanel(button));
     });
 
-    document.getElementById('repeat-btn').addEventListener('click', repeatProblem);
+    document.querySelectorAll('.volume-slider').forEach(slider => {
+        slider.addEventListener('input', event => {
+            state.volume = Number(event.target.value);
+            state.isMuted = state.volume === 0;
+            updateMuteUI();
+            saveProgress();
+            if (state.isMuted) window.speechSynthesis.cancel();
+        });
+    });
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            closeDifficulty();
+            closeVolumePanel();
+        }
+    });
+
+    document.addEventListener('click', event => {
+        if (!event.target.closest('.volume-control')) closeVolumePanel();
+    });
 }
 
 // Navegación
@@ -190,7 +271,7 @@ function generateQuestion() {
         op = due.op;
         text = formatText(op, n1, n2);
     } else {
-        const level = state.levels[op] || 1;
+        const level = state.fixedLevel || state.levels[op] || 1;
         const range = getRangeForLevel(op, level);
 
         if (op === 'suma') {
@@ -316,7 +397,7 @@ function checkAnswer(selected, btn) {
         if (state.streak > state.bestStreak) state.bestStreak = state.streak;
         
         // Subir dificultad cada 10 aciertos
-        if (state.consecutiveCorrect % 10 === 0) {
+        if (state.fixedLevel === 0 && state.consecutiveCorrect % 10 === 0) {
             if (state.operation === 'mixta') {
                 // Modo mixto: avanzan las cuatro operaciones juntas
                 ['suma', 'resta', 'mult', 'div'].forEach(op => state.levels[op]++);
@@ -403,21 +484,21 @@ function closeSession() {
 
 function showFeedback(type) {
     const overlay = document.getElementById('feedback-overlay');
-    const emoji = document.getElementById('feedback-emoji');
+    const icon = document.getElementById('feedback-icon');
     const text = document.getElementById('feedback-text');
     const continueBtn = document.getElementById('continue-btn');
 
     if (type === 'correct') {
-        emoji.innerText = '🎉';
+        icon.src = 'assets/ui/celebrate.png';
         const praises = ['¡Muy bien!', '¡Genial!', '¡Lo lograste!'];
         text.innerText = praises[Math.floor(Math.random() * praises.length)];
         continueBtn.style.display = 'none';
     } else if (type === 'levelup') {
-        emoji.innerText = '🚀';
+        icon.src = 'assets/ui/adventure.png';
         text.innerText = '¡Subiste de nivel!';
         continueBtn.style.display = 'none';
     } else if (type === 'incorrect') {
-        emoji.innerText = '🤗';
+        icon.src = 'assets/ui/encourage.png';
         text.innerText = `¡Casi! La respuesta era ${state.correctAnswer}`;
         continueBtn.style.display = 'block';
     }
@@ -479,10 +560,14 @@ function queueMissedVariations(op, n1, n2, answer) {
 
 // Ayudas Visuales
 // Renderiza un conteo como bloques; si es grande, agrupa en decenas para no desbordar
+function blockItems(count, color, className = '') {
+    return `<span class="visual-block ${className}" style="background:${color}"></span>`.repeat(count);
+}
+
 function renderCount(count, color) {
-    if (count <= 20) return `<div style="color:${color}">` + '⬛'.repeat(count) + `</div>`;
+    if (count <= 20) return `<div class="visual-group">${blockItems(count, color)}</div>`;
     const groups = Math.ceil(count / 10);
-    return `<div style="color:${color}">` + '⬛'.repeat(groups) + `</div><div style="color:${color}; font-size:0.9rem;">${count} = ${groups} grupos de 10</div>`;
+    return `<div class="visual-group">${blockItems(groups, color)}</div><div style="color:${color}; font-size:0.9rem;">${count} = ${groups} grupos de 10</div>`;
 }
 
 function showHelp() {
@@ -503,10 +588,9 @@ function showHelp() {
         if (state.num1 <= 20) {
             let blocks = '';
             for(let i=0; i<state.num1; i++) {
-                if (i < state.num2) blocks += '⬛'; // Se quitan
-                else blocks += '🟩'; // Quedan
+                blocks += blockItems(1, i < state.num2 ? '#555' : '#4CAF50', i < state.num2 ? 'removed' : '');
             }
-            html += `<div>` + blocks + `</div>`;
+            html += `<div class="visual-group">${blocks}</div>`;
         } else {
             html += renderCount(state.num2, '#333') + renderCount(state.num1 - state.num2, '#4CAF50');
         }
@@ -514,7 +598,7 @@ function showHelp() {
         title.innerText = `${state.num1} grupos de ${state.num2}`;
         if (state.num1 <= 10 && state.num2 <= 20) {
             for(let i=0; i<state.num1; i++) {
-                html += `<div>` + '🟦'.repeat(state.num2) + `</div>`;
+                html += `<div class="visual-group">${blockItems(state.num2, '#2196F3')}</div>`;
             }
         } else {
             html += renderCount(state.num1, '#2196F3') + `<div style="font-size:0.9rem;">grupos de ${state.num2}</div>`;
@@ -523,7 +607,7 @@ function showHelp() {
         title.innerText = `Repartir ${state.num1} en ${state.num2} grupos`;
         if (state.num2 <= 10 && state.correctAnswer <= 20) {
             for(let i=0; i<state.num2; i++) {
-                html += `<div style="margin: 5px; padding: 5px; border: 2px dashed #9C27B0; border-radius: 10px;">` + '🟣'.repeat(state.correctAnswer) + `</div>`;
+                html += `<div class="visual-group outlined">${blockItems(state.correctAnswer, '#9C27B0')}</div>`;
             }
         } else {
             html += renderCount(state.num2, '#9C27B0') + `<div style="font-size:0.9rem;">grupos de ${state.correctAnswer}</div>`;

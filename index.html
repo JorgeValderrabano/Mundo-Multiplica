@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mundo Multiplica: Aventuras con Números</title>
+    <meta name="description" content="Juego de matemáticas para niños: suma, resta, multiplicación y división con aventuras temáticas.">
+    <meta name="theme-color" content="#2196F3">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -12,39 +17,109 @@
     <!-- MENU SCREEN -->
     <div id="menu-screen" class="screen active">
         <div class="header">
-            <div class="stats-badge">⭐ <span id="total-stars">0</span> 🎖️ <span id="total-stickers">0</span></div>
-            <div class="header-controls">
-                <button class="btn-icon" id="repeat-btn" aria-label="Repetir problema">🔁</button>
-                <button class="btn-icon" id="mute-btn" aria-label="Activar o silenciar voz">🔊</button>
+            <div class="stats-badge">
+                <span class="counter-item">
+                    <img class="counter-icon" src="assets/ui/star-counter.png" alt="Estrellas">
+                    <span id="total-stars">0</span>
+                </span>
+                <span class="counter-item">
+                    <img class="counter-icon" src="assets/ui/heart-counter.png" alt="Calcomanías">
+                    <span id="total-stickers">0</span>
+                </span>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" id="difficulty-trigger" onclick="openDifficulty()" aria-label="Elegir nivel de dificultad" aria-haspopup="dialog">
+                    <img class="ui-icon" src="assets/ui/adventure.png" alt="">
+                </button>
+                <div class="volume-control">
+                    <button class="btn-icon volume-button" id="mute-btn" aria-label="Ajustar volumen" aria-expanded="false" aria-controls="volume-popover"><img class="ui-icon volume-icon" src="assets/ui/sound-button.png" alt=""></button>
+                    <div class="volume-popover" id="volume-popover" aria-hidden="true">
+                        <label for="volume-slider">Volumen</label>
+                        <input class="volume-slider" id="volume-slider" type="range" min="0" max="1" step="0.1" value="0.8" aria-label="Volumen de la voz">
+                    </div>
+                </div>
             </div>
         </div>
-        <h1 class="title">Mundo Multiplica</h1>
+        <h1 class="title">
+            <img src="assets/branding/mundo-multiplica-logo-1200.png" alt="Mundo Multiplica">
+        </h1>
         <div class="paths-grid">
             <button class="path-btn path-suma" onclick="startGame('suma')" aria-label="Jugar Bosque de la Suma">
-                <span class="icon">🌲</span> Bosque de la Suma
+                <img class="path-image" src="assets/menu/bosque-suma.webp" alt="">
             </button>
             <button class="path-btn path-resta" onclick="startGame('resta')" aria-label="Jugar Montaña de la Resta">
-                <span class="icon">⛰️</span> Montaña de la Resta
+                <img class="path-image" src="assets/menu/montana-resta.webp" alt="">
             </button>
             <button class="path-btn path-mult" onclick="startGame('mult')" aria-label="Jugar Ciudad Multiplicadora">
-                <span class="icon">🏙️</span> Ciudad Multiplicadora
+                <img class="path-image" src="assets/menu/ciudad-multiplicadora.webp" alt="">
             </button>
             <button class="path-btn path-div" onclick="startGame('div')" aria-label="Jugar Bahía de la División">
-                <span class="icon">🌊</span> Bahía de la División
+                <img class="path-image" src="assets/menu/bahia-division.webp" alt="">
             </button>
             <button class="path-btn path-mixed" onclick="startGame('mixta')" aria-label="Jugar Aventura Mixta">
-                <span class="icon">🗺️</span> Aventura Mixta
+                <img class="path-image" src="assets/menu/aventura-mixta.webp" alt="">
             </button>
+        </div>
+
+        <div id="difficulty-modal" class="difficulty-modal" role="dialog" aria-modal="true" aria-labelledby="difficulty-title" aria-hidden="true" onclick="closeDifficultyFromBackdrop(event)">
+          <div class="difficulty-dialog">
+            <button class="difficulty-close" onclick="closeDifficulty()" aria-label="Cerrar selector de dificultad"><span aria-hidden="true">×</span></button>
+            <div class="level-selector">
+            <div class="level-heading">
+                <p class="level-eyebrow">Elige tu reto</p>
+                <h2 class="level-title" id="difficulty-title">Nivel de dificultad</h2>
+            </div>
+            <div class="level-buttons" role="group" aria-label="Seleccionar nivel de dificultad">
+                <button class="level-btn active" data-level="0" onclick="setFixedLevel(0)" aria-pressed="true">
+                    <span class="difficulty-token token-auto" aria-hidden="true">A</span>
+                    <span class="difficulty-copy"><strong>Automático</strong><small>Crece con cada racha</small></span>
+                    <span class="difficulty-check" aria-hidden="true"></span>
+                </button>
+                <button class="level-btn" data-level="1" onclick="setFixedLevel(1)" aria-pressed="false">
+                    <span class="difficulty-token token-1" aria-hidden="true">1</span>
+                    <span class="difficulty-copy"><strong>Primeros pasos</strong><small>Números pequeños</small></span>
+                    <span class="difficulty-check" aria-hidden="true"></span>
+                </button>
+                <button class="level-btn" data-level="2" onclick="setFixedLevel(2)" aria-pressed="false">
+                    <span class="difficulty-token token-2" aria-hidden="true">2</span>
+                    <span class="difficulty-copy"><strong>Explorador</strong><small>Un reto tranquilo</small></span>
+                    <span class="difficulty-check" aria-hidden="true"></span>
+                </button>
+                <button class="level-btn" data-level="3" onclick="setFixedLevel(3)" aria-pressed="false">
+                    <span class="difficulty-token token-3" aria-hidden="true">3</span>
+                    <span class="difficulty-copy"><strong>Aventurero</strong><small>Operaciones más grandes</small></span>
+                    <span class="difficulty-check" aria-hidden="true"></span>
+                </button>
+                <button class="level-btn" data-level="4" onclick="setFixedLevel(4)" aria-pressed="false">
+                    <span class="difficulty-token token-4" aria-hidden="true">4</span>
+                    <span class="difficulty-copy"><strong>Experto</strong><small>Tablas hasta el 13</small></span>
+                    <span class="difficulty-check" aria-hidden="true"></span>
+                </button>
+                <button class="level-btn" data-level="5" onclick="setFixedLevel(5)" aria-pressed="false">
+                    <span class="difficulty-token token-5" aria-hidden="true">5+</span>
+                    <span class="difficulty-copy"><strong>Maestro</strong><small>El desafío mayor</small></span>
+                    <span class="difficulty-check" aria-hidden="true"></span>
+                </button>
+            </div>
+            <button class="reset-btn" onclick="resetLevels()" aria-label="Reiniciar todos los niveles a 1">Reiniciar desde nivel 1</button>
+            </div>
+          </div>
         </div>
     </div>
 
     <!-- GAME SCREEN -->
     <div id="game-screen" class="screen">
         <div class="header" style="width: 100%;">
-            <button class="btn-icon" onclick="goHome()" aria-label="Volver al menú">🏠</button>
+            <button class="btn-icon" onclick="goHome()" aria-label="Volver al menú"><img class="ui-icon" src="assets/ui/home-button.png" alt=""></button>
             <div class="header-controls">
-                <button class="btn-icon" onclick="repeatProblem()" aria-label="Repetir problema">🔁</button>
-                <div class="streak-container">🔥 Racha: <span id="current-streak">0</span></div>
+                <div class="volume-control">
+                    <button class="btn-icon volume-button" id="game-volume-btn" aria-label="Ajustar volumen" aria-expanded="false" aria-controls="game-volume-popover"><img class="ui-icon volume-icon" src="assets/ui/sound-button.png" alt=""></button>
+                    <div class="volume-popover" id="game-volume-popover" aria-hidden="true">
+                        <label for="game-volume-slider">Volumen</label>
+                        <input class="volume-slider" id="game-volume-slider" type="range" min="0" max="1" step="0.1" value="0.8" aria-label="Volumen de la voz durante el juego">
+                    </div>
+                </div>
+                <div class="streak-container">Racha: <span id="current-streak">0</span></div>
             </div>
         </div>
 
@@ -56,7 +131,7 @@
         
         <div class="question-area">
             <h2 class="question-text" id="question-text">? + ?</h2>
-            <button class="help-btn" onclick="showHelp()" aria-label="Mostrar ayuda visual">💡 Necesito ayuda</button>
+            <button class="help-btn" onclick="showHelp()" aria-label="Mostrar ayuda visual"><img class="ui-icon" src="assets/ui/help.png" alt=""> Necesito ayuda</button>
         </div>
 
         <div class="answers-grid" id="answers-grid">
@@ -66,7 +141,7 @@
 
     <!-- FEEDBACK OVERLAY -->
     <div id="feedback-overlay">
-        <div class="feedback-emoji" id="feedback-emoji">🎉</div>
+        <img class="feedback-icon" id="feedback-icon" src="assets/ui/celebrate.png" alt="">
         <p class="feedback-text" id="feedback-text">¡Muy bien!</p>
         <button class="continue-btn" id="continue-btn" style="display: none;" onclick="continueGame()" aria-label="Continuar con la siguiente pregunta">Continuar</button>
     </div>
@@ -75,7 +150,7 @@
     <div id="session-overlay">
         <div class="session-content">
             <h2>¡Sesión completada!</h2>
-            <div class="session-stars">⭐ <span id="session-stars">0</span></div>
+            <div class="session-stars"><img class="session-icon" src="assets/ui/star.png" alt="Estrellas"> <span id="session-stars">0</span></div>
             <p class="feedback-text">Mejor racha: <span id="session-best">0</span></p>
             <p class="feedback-text">Calcomanías: <span id="session-stickers">0</span></p>
             <button class="continue-btn" onclick="closeSession()" aria-label="Jugar otra sesión">Jugar de nuevo</button>
@@ -92,6 +167,14 @@
     </div>
 </div>
 
+<script>
+    // Registrar Service Worker para PWA (solo en http/https)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        });
+    }
+</script>
 <script src="js/game.js"></script>
 </body>
 </html>
