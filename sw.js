@@ -1,5 +1,5 @@
 // Service Worker: cache del app shell para funcionar offline
-const CACHE_NAME = 'mundo-multiplica-v9';
+const CACHE_NAME = 'mundo-multiplica-v13';
 const APP_SHELL = [
   './',
   './index.html',
@@ -7,11 +7,16 @@ const APP_SHELL = [
   './js/game.js',
   './manifest.json',
   './assets/branding/mundo-multiplica-logo-1200.png',
-  './assets/menu/bosque-suma.webp',
-  './assets/menu/montana-resta.webp',
-  './assets/menu/ciudad-multiplicadora.webp',
-  './assets/menu/bahia-division.webp',
-  './assets/menu/aventura-mixta.webp',
+  './assets/menu/suma-label.png',
+  './assets/menu/resta-label.png',
+  './assets/menu/multiplicadora-label.png',
+  './assets/menu/division-label.png',
+  './assets/menu/mixta-label.png',
+  './assets/backgrounds/suma.jpg',
+  './assets/backgrounds/resta.jpg',
+  './assets/backgrounds/multiplicacion.jpg',
+  './assets/backgrounds/division.jpg',
+  './assets/backgrounds/mixta.jpg',
   './assets/ui/star-counter.png',
   './assets/ui/heart-counter.png',
   './assets/ui/home-button.png',

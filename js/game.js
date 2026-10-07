@@ -208,11 +208,19 @@ function goHome() {
     document.getElementById('feedback-overlay').style.display = 'none';
     document.getElementById('game-screen').classList.remove('active');
     document.getElementById('menu-screen').classList.add('active');
+    document.body.classList.remove('game-active');
     window.speechSynthesis.cancel();
 }
 
 // Lógica del Juego
 function startGame(op) {
+    const backgrounds = {
+        suma: 'assets/backgrounds/suma.jpg',
+        resta: 'assets/backgrounds/resta.jpg',
+        mult: 'assets/backgrounds/multiplicacion.jpg',
+        div: 'assets/backgrounds/division.jpg',
+        mixta: 'assets/backgrounds/mixta.jpg'
+    };
     state.operation = op;
     state.streak = 0;
     state.consecutiveCorrect = 0; // Reiniciamos contador de dificultad al entrar
@@ -221,6 +229,9 @@ function startGame(op) {
     updateStatsUI();
     document.getElementById('menu-screen').classList.remove('active');
     document.getElementById('game-screen').classList.add('active');
+    const backgroundUrl = new URL(backgrounds[op], document.baseURI).href;
+    document.body.style.setProperty('--game-background', `url('${backgroundUrl}')`);
+    document.body.classList.add('game-active');
     nextQuestion();
 }
 
